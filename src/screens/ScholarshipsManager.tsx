@@ -1,17 +1,20 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   collection, getDocs, getCountFromServer, query, orderBy, limit, startAfter,
+  addDoc, serverTimestamp,
   type QueryDocumentSnapshot, type DocumentData,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Scholarship } from '../types/scholarship';
 import { migrateScholarships, SCHOLARSHIP_DATA } from '../utils/migration';
+import ScholarshipFormModal, { type ScholarshipFormData } from '../components/ScholarshipFormModal';
 
 async function fetchTotalCount(): Promise<number> {
   const snap = await getCountFromServer(collection(db, 'scholarships'));
   return snap.data().count;
 }
-const PAGE_SIZE=20
+const PAGE_SIZE=10
 const PAGE_SIZE_OPTIONS = [5,10, 20] as const;
 type PageSizeOption = typeof PAGE_SIZE_OPTIONS[number];
 
@@ -76,6 +79,7 @@ function TableSkeleton() {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function ScholarshipsManager() {
+  const navigate = useNavigate();
   const [docs,        setDocs]        = useState<ScholarshipDoc[]>([]);
   const [totalCount,  setTotalCount]  = useState<number | null>(null);
   const [loading,     setLoading]     = useState(true);
@@ -84,7 +88,8 @@ export default function ScholarshipsManager() {
   const [searchText,  setSearchText]  = useState('');
   const [pageNumber,  setPageNumber]  = useState(1);
   const [hasNext,     setHasNext]     = useState(false);
-  const [pageSize,    setPageSize]    = useState<PageSizeOption>(20);
+  const [pageSize,    setPageSize]    = useState<PageSizeOption>(PAGE_SIZE);
+  const [isCreating,  setIsCreating]  = useState(false);
 
   const totalPages = totalCount !== null ? Math.ceil(totalCount / pageSize) : null;
 
@@ -186,6 +191,20 @@ export default function ScholarshipsManager() {
     }
   }
 
+  // ── Create ────────────────────────────────────────────────────────────────────
+  async function handleCreate(data: ScholarshipFormData) {
+    await addDoc(collection(db, 'scholarships'), { ...data, createdAt: serverTimestamp() });
+    setIsCreating(false);
+    const freshCursors = { 1: null as FirestoreDoc | null };
+    setCursors(freshCursors);
+    setPageNumber(1);
+    setSearchText('');
+    await Promise.all([
+      fetchPage(1, freshCursors, pageSize),
+      fetchTotalCount().then(setTotalCount),
+    ]);
+  }
+
   // ── Client-side filter within current page ────────────────────────────────────
   const filtered = useMemo(() => {
     const q = searchText.trim();
@@ -231,7 +250,10 @@ export default function ScholarshipsManager() {
             </span>
             {migrating ? 'מגר...' : 'הגר נתונים'}
           </button> */}
-          <button className="px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-bold flex items-center gap-2 shadow-float hover:opacity-90 transition-opacity text-sm">
+          <button
+            onClick={() => setIsCreating(true)}
+            className="px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-bold flex items-center gap-2 shadow-float hover:opacity-90 transition-opacity text-sm"
+          >
             <span className="material-symbols-outlined text-lg">add_circle</span>
             הוספת מלגה
           </button>
@@ -318,7 +340,11 @@ export default function ScholarshipsManager() {
                 </tr>
               ) : (
                 filtered.map(s => (
-                  <tr key={s.id} className="hover:bg-primary/[0.03] transition-colors group">
+                  <tr
+                    key={s.id}
+                    onClick={() => navigate(`/scholarship-list/${s.id}`)}
+                    className="hover:bg-primary/[0.06] transition-colors group cursor-pointer"
+                  >
                     <td className="px-4 py-3">
                       <span className="font-bold text-on-surface text-sm">{s.name}</span>
                     </td>
@@ -423,6 +449,15 @@ export default function ScholarshipsManager() {
         </div>
 
       </div>
+
+      {/* Create Modal */}
+      {isCreating && (
+        <ScholarshipFormModal
+          mode="create"
+          onSave={handleCreate}
+          onClose={() => setIsCreating(false)}
+        />
+      )}
     </>
   );
 }

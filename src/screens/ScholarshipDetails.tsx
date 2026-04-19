@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Scholarship } from '../types/scholarship';
+import ScholarshipFormModal from '../components/ScholarshipFormModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function criteriaLabel(value: string): React.ReactNode {
@@ -41,8 +42,15 @@ export default function ScholarshipDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [scholarship, setScholarship] = useState<Scholarship | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [notFound, setNotFound]       = useState(false);
+  const [loading,    setLoading]      = useState(true);
+  const [notFound,   setNotFound]     = useState(false);
+  const [isEditing,  setIsEditing]    = useState(false);
+
+  async function handleSave(data: Omit<Scholarship, 'createdAt'>) {
+    await updateDoc(doc(db, 'scholarships', id!), { ...data });
+    setScholarship(prev => prev ? { ...prev, ...data } : prev);
+    setIsEditing(false);
+  }
 
   useEffect(() => {
     if (!id) { setNotFound(true); setLoading(false); return; }
@@ -191,7 +199,10 @@ export default function ScholarshipDetails() {
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
                 חזרה לרשימה
               </button>
-              <button className="w-full py-3 px-4 text-error border border-error/10 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-error/5 transition-colors text-sm">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-full py-3 px-4 text-error border border-error/10 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-error/5 transition-colors text-sm"
+              >
                 <span className="material-symbols-outlined text-lg">edit</span>
                 עריכת מלגה
               </button>
@@ -378,6 +389,16 @@ export default function ScholarshipDetails() {
 
       {/* Bottom padding for mobile FAB */}
       <div className="lg:hidden h-24" />
+
+      {/* Edit Modal */}
+      {isEditing && scholarship && (
+        <ScholarshipFormModal
+          mode="edit"
+          initial={scholarship}
+          onSave={handleSave}
+          onClose={() => setIsEditing(false)}
+        />
+      )}
     </>
   );
 }

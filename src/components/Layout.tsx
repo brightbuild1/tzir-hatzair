@@ -1,12 +1,27 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [scholarshipsOpen, setScholarshipsOpen] = useState(
     location.pathname === '/scholarship-list' || location.pathname === '/candidate-list'
   );
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const isActive = (path: string) => location.pathname === path;
   const isScholarshipsActive =
@@ -153,11 +168,89 @@ export default function Layout() {
           <button className="p-2 hover:bg-surface-container rounded-full transition-colors">
             <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
           </button>
-          <button className="p-2 hover:bg-surface-container rounded-full transition-colors">
-            <span className="material-symbols-outlined text-on-surface-variant">settings</span>
-          </button>
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container">person</span>
+
+          {/* User avatar + popup */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setUserMenuOpen(o => !o)}
+              className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-primary/30 transition-all focus:outline-none focus:ring-primary/50"
+            >
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt={user.displayName ?? 'משתמש'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-full h-full bg-primary-container flex items-center justify-center">
+                  <span className="material-symbols-outlined text-on-primary-container">person</span>
+                </div>
+              )}
+            </button>
+
+            {/* Popup */}
+            {userMenuOpen && (
+              <div
+                className="absolute left-0 top-[calc(100%+12px)] w-72 bg-surface-container-lowest rounded-2xl overflow-hidden z-50"
+                style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)' }}
+              >
+                {/* Header — user info */}
+                <div className="bg-primary px-5 py-5 relative overflow-hidden">
+                  <div className="absolute -top-6 -right-6 w-28 h-28 bg-white/10 rounded-full" />
+                  <div className="absolute -bottom-8 -left-4 w-24 h-24 bg-primary-container/30 rounded-full" />
+                  <div className="relative z-10 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/30 flex-shrink-0">
+                      {user?.photoURL ? (
+                        <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-white text-2xl">person</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right min-w-0">
+                      <p className="text-white font-bold text-sm truncate">{user?.displayName ?? 'משתמש'}</p>
+                      <p className="text-white/60 text-xs truncate">{user?.email ?? ''}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu items */}
+                <div className="py-2">
+                  <button
+                    onClick={() => { setUserMenuOpen(false); navigate('/dashboard'); }}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-right text-sm text-on-surface hover:bg-surface-container transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-on-surface-variant text-[20px]">dashboard</span>
+                    <span>לוח בקרה</span>
+                  </button>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); navigate('/scholarship-list'); }}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-right text-sm text-on-surface hover:bg-surface-container transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-on-surface-variant text-[20px]">school</span>
+                    <span>רשימת מלגות</span>
+                  </button>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); navigate('/settings'); }}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-right text-sm text-on-surface hover:bg-surface-container transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-on-surface-variant text-[20px]">manage_accounts</span>
+                    <span>הגדרות חשבון</span>
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="mx-4 h-px bg-outline-variant/20" />
+
+                {/* Logout */}
+                <div className="py-2">
+                  <button
+                    onClick={async () => { setUserMenuOpen(false); await logout(); }}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-right text-sm text-error hover:bg-error/5 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    <span className="font-medium">התנתקות</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
