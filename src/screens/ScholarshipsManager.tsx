@@ -7,7 +7,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Scholarship } from '../types/scholarship';
-import { migrateScholarships, SCHOLARSHIP_DATA } from '../utils/migration';
 import ScholarshipFormModal, { type ScholarshipFormData } from '../components/ScholarshipFormModal';
 
 async function fetchTotalCount(): Promise<number> {
@@ -83,7 +82,6 @@ export default function ScholarshipsManager() {
   const [docs,        setDocs]        = useState<ScholarshipDoc[]>([]);
   const [totalCount,  setTotalCount]  = useState<number | null>(null);
   const [loading,     setLoading]     = useState(true);
-  const [migrating,   setMigrating]   = useState(false);
   const [error,       setError]       = useState<string | null>(null);
   const [searchText,  setSearchText]  = useState('');
   const [pageNumber,  setPageNumber]  = useState(1);
@@ -166,29 +164,6 @@ export default function ScholarshipsManager() {
     setSearchText('');
     setCursors(freshCursors);
     fetchPage(1, freshCursors, newSize);
-  }
-
-  // ── Migration ─────────────────────────────────────────────────────────────────
-  async function handleMigrate() {
-    if (!confirm(`מעלה ${SCHOLARSHIP_DATA.length} מלגות ל-Firestore. להמשיך?`)) return;
-    setMigrating(true);
-    try {
-      await migrateScholarships(SCHOLARSHIP_DATA);
-      // Reset pagination, reload page 1 and refresh total count
-      const freshCursors = { 1: null as FirestoreDoc | null };
-      setCursors(freshCursors);
-      setPageNumber(1);
-      setSearchText('');
-      await Promise.all([
-        fetchPage(1, freshCursors, pageSize),
-        fetchTotalCount().then(setTotalCount),
-      ]);
-    } catch (err) {
-      console.error(err);
-      alert('שגיאה במהלך ההגירה – ראה console לפרטים.');
-    } finally {
-      setMigrating(false);
-    }
   }
 
   // ── Create ────────────────────────────────────────────────────────────────────
