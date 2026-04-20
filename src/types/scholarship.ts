@@ -19,3 +19,4 @@ export interface Scholarship {
   link:         string;
   createdAt?:   Timestamp;
 }
+

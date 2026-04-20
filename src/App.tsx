@@ -4,6 +4,9 @@ import { useAuth } from './hooks/useAuth';
 import ScholarshipsManager from './screens/ScholarshipsManager';
 import ScholarshipDetails from './screens/ScholarshipDetails';
 import SoldiersManager from './screens/SoldiersManager';
+import CandidatesManager from './screens/CandidatesManager';
+import CandidateDetails from './screens/CandidateDetails';
+import CandidateQuestionnaire from './screens/CandidateQuestionnaire';
 import Layout from './components/Layout';
 import NotFound from './screens/NotFound';
 import LoginScreen from './screens/LoginScreen';
@@ -48,6 +51,7 @@ function App() {
       <Routes>
         {/* Public */}
         <Route path="/login" element={<RedirectIfAuth />} />
+        <Route path="/questionnaire" element={<CandidateQuestionnaire />} />
 
         {/* Protected — require login */}
         <Route element={<RequireAuth />}>
@@ -55,7 +59,8 @@ function App() {
             <Route index element={<Navigate to="/scholarship-list" replace />} />
             <Route path="/scholarship-list" element={<ScholarshipsManager />} />
             <Route path="/scholarship-list/:id" element={<ScholarshipDetails />} />
-            <Route path="/candidate-list" element={<SoldiersManager />} />
+            <Route path="/candidate-list" element={<CandidatesManager />} />
+            <Route path="/candidate-list/:id" element={<CandidateDetails />} />
             <Route path="/soldiers" element={<SoldiersManager />} />
           </Route>
         </Route>

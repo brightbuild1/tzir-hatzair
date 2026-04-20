@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../hooks/useAuth';
-
-// Academic library image from Stitch design
-const HERO_IMG = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBCq03Z2ejVJon4CHTo63XGQ5Fe4LIeo_536gfAGRlIxEEi8mblTd9YcGNo9GMIxatW3Rdm_0flMHL9fmJrCg70XArWm3J6bsvU2TY5WDYBoQRscTq4-zPmWZQYBTy55T0Fc7-vVQMWFn5wLpq_QFwnUMk8g7_su5PTP6sB7_dj_lNeBiUSNhQ_wkGF_TRQ4rGi5PvofCOjwP_1IQpMaiE7TWf32tZ3rOix7c9jEhOObkiTjRzC0N_K1CZWjEtN3VyM_jUuko2uRPDt';
+import Aurora from '../components/Aurora';
 
 interface LoginScreenProps {
   onRegisterClick?: () => void;
@@ -50,19 +48,46 @@ export default function LoginScreen({ onRegisterClick, onForgotPassword }: Login
       <main className="flex-grow flex items-stretch pt-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 w-full">
 
-          {/* Left: Hero Image Panel */}
-          <div className="hidden lg:block relative overflow-hidden">
-            <div className="absolute inset-0 z-10 bg-gradient-to-t from-primary/80 to-transparent" />
-            <img
-              src={HERO_IMG}
-              alt="סביבה אקדמית"
-              className="absolute inset-0 object-cover w-full h-full"
-            />
-            <div className="absolute bottom-12 right-12 z-20 max-w-lg text-white">
-              <h2 className="text-4xl font-extrabold mb-4 leading-tight font-headline">
-                בונים את העתיד שלך באקדמיה
+          {/* Left: Aurora Hero Panel */}
+          <div className="hidden lg:flex relative overflow-hidden items-end">
+            {/* Animated Aurora background */}
+            <Aurora />
+
+            {/* Floating stat chips */}
+            <div className="absolute top-16 right-10 z-20 flex flex-col gap-3">
+              <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/10">
+                <span className="material-symbols-outlined text-cyan-300 text-xl">school</span>
+                <div className="text-right">
+                  <p className="text-white font-black text-lg leading-none">100+</p>
+                  <p className="text-white/60 text-xs">מלגות פעילות</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/10">
+                <span className="material-symbols-outlined text-blue-300 text-xl">military_tech</span>
+                <div className="text-right">
+                  <p className="text-white font-black text-lg leading-none">3,000+</p>
+                  <p className="text-white/60 text-xs">חיילים נתמכים</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/10">
+                <span className="material-symbols-outlined text-indigo-300 text-xl">payments</span>
+                <div className="text-right">
+                  <p className="text-white font-black text-lg leading-none">₪2.4M</p>
+                  <p className="text-white/60 text-xs">תקציב שנתי</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom text */}
+            <div className="relative z-20 p-12 pb-14">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 border border-white/10 mb-6">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-white/80 text-xs font-medium">פלטפורמה פעילה · עונת 2024/25</span>
+              </div>
+              <h2 className="text-4xl font-extrabold mb-4 leading-tight font-headline text-white">
+                בונים את העתיד שלך<br />באקדמיה
               </h2>
-              <p className="text-xl opacity-90 font-light">
+              <p className="text-lg text-white/70 font-light leading-relaxed max-w-sm">
                 ציר לצעיר: הפלטפורמה המתקדמת לניהול מלגות, הכוונה לימודית וצמיחה אישית לסטודנטים המצטיינים של מחר.
               </p>
             </div>
